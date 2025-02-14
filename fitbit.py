@@ -4,7 +4,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
-
+import statsmodels.formula.api as smf
+import seaborn as sns
 file = 'DENG/daily_acivity.csv'
 
 def read_csv_file(file):
@@ -100,3 +101,37 @@ unique_users(df)
 total_distance_per_user(df)
 calories_per_day(df, 1503960366, start_date="2016-03-25", end_date="2016-04-8")
 workout_frequency_by_day(df)
+
+
+
+
+
+activity=pd.read_csv("daily_acivity.csv")
+activity.head()
+
+activity["Id"]=activity["Id"].astype("category")
+activity.columns
+
+regression=smf.ols(formula="Calories~TotalSteps+Id",data=activity).fit()
+print(regression.summary())
+#this linear regression shows the relationship between calories burnt and total steps taken by a given user
+
+
+def plot_regression(activity, id):
+    filtered_activity = activity[activity["Id"] == id]
+    if filtered_activity.empty:
+        print ("no data")
+        return
+    individual=smf.ols(formula="Calories~TotalSteps",data=filtered_activity).fit()
+    filtered_activity["Predicted_Calories"]=individual.predict(filtered_activity["TotalSteps"])
+    plt.figure(figsize=(8,6))
+    sns.scatterplot(x=filtered_activity["TotalSteps"],y=filtered_activity["Calories"],label="data")
+    sns.lineplot(x=filtered_activity["TotalSteps"],y=filtered_activity["Predicted_Calories"])
+    plt.xlabel("Total Steps")
+    plt.ylabel("Calories")
+    plt.title("Calories Burnt vs Total Steps")
+    plt.legend()
+    plt.show()
+
+plot_regression(activity, 1503960366)
+#plot of the regression line for user 1503960366
