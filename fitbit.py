@@ -54,9 +54,10 @@ def calories_per_day(df, id, start_date, end_date):
         current_date += timedelta(days=1) 
 
     calories_series = pd.Series(calories_per_day, name="Calories Burnt")
-    
+    dates = pd.date_range(start=start_date, end=end_date)
+
     plt.figure(figsize=(12, 6))
-    calories_series.plot(kind='bar', color='blue', edgecolor='black')
+    plt.bar(dates, calories_series, color='blue', edgecolor='black')
     plt.xlabel("Day")
     plt.ylabel("Total Calories")
     plt.title("Total Calories Burnt per Day by user %d" %id)
