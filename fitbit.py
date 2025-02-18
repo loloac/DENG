@@ -135,3 +135,44 @@ def plot_regression(activity, id):
 
 plot_regression(activity, 1503960366)
 #plot of the regression line for user 1503960366
+
+#effects of light activity on calories burnt
+activity["LightlyActiveMinutes"]=activity["LightlyActiveMinutes"].astype("float")
+regression_light_activity = smf.ols(formula="Calories~LightlyActiveMinutes", data=activity).fit()
+print(regression_light_activity.summary())
+
+def plot_light_activity_regression(activity):
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x=activity["LightlyActiveMinutes"], y=activity["Calories"], label="data")
+    sns.lineplot(x=activity["LightlyActiveMinutes"], y=regression_light_activity.predict(activity["LightlyActiveMinutes"]), color='red')
+    plt.xlabel("Lightly Active Minutes")
+    plt.ylabel("Calories")
+    plt.title("Calories Burnt vs Lightly Active Minutes")
+    plt.legend()
+    plt.show()
+
+plot_light_activity_regression(activity)
+#as the plot shows, theres a slight effect of light activity on calories.
+#no high burn of calories is recorded with a high number of lightly active minutes
+
+#shows time spent on each activity type
+def most_common_act(df):
+    types = df[['VeryActiveMinutes', 'FairlyActiveMinutes', 'LightlyActiveMinutes', 'SedentaryMinutes']].sum()
+    most_common = types.idxmax()
+    types.index = ['Very Active', 'Fairly Active', 'Lightly Active', 'Sedentary']
+    plt.figure(figsize=(12, 6))
+    types.plot(kind='bar', color='skyblue', edgecolor='black')
+    
+    plt.xlabel("Activity Type")
+    plt.ylabel("Total Minutes")
+    plt.title("Total Minutes Spent on Each Activity Type")
+    plt.xticks(rotation=45, ha='right')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
+
+    return most_common, types[most_common]
+
+most_common_act(activity)
+#as one would expect, the most common activity is sedentary
+
