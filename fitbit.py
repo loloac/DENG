@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 import statsmodels.formula.api as smf
 import seaborn as sns
+import sqlite3
+
 file = 'DENG/daily_acivity.csv'
 
 def read_csv_file(file):
@@ -97,23 +99,21 @@ def workout_frequency_by_day(df):
 # Test Cases =================================================================
 
 df = read_csv_file(file)
-unique_users(df)
-total_distance_per_user(df)
-calories_per_day(df, 1503960366, start_date="2016-03-25", end_date="2016-04-8")
-workout_frequency_by_day(df)
+#unique_users(df)
+#total_distance_per_user(df)
+#calories_per_day(df, 1503960366, start_date="2016-03-25", end_date="2016-04-8")
+#workout_frequency_by_day(df)
 
 
 
-
-
-activity=pd.read_csv("daily_acivity.csv")
+activity=pd.read_csv("DENG/daily_acivity.csv")
 activity.head()
 
 activity["Id"]=activity["Id"].astype("category")
 activity.columns
 
-regression=smf.ols(formula="Calories~TotalSteps+Id",data=activity).fit()
-print(regression.summary())
+#regression=smf.ols(formula="Calories~TotalSteps+Id",data=activity).fit()
+#print(regression.summary())
 #this linear regression shows the relationship between calories burnt and total steps taken by a given user
 
 
@@ -133,13 +133,13 @@ def plot_regression(activity, id):
     plt.legend()
     plt.show()
 
-plot_regression(activity, 1503960366)
+# plot_regression(activity, 1503960366)
 #plot of the regression line for user 1503960366
 
 #effects of light activity on calories burnt
-activity["LightlyActiveMinutes"]=activity["LightlyActiveMinutes"].astype("float")
+#activity["LightlyActiveMinutes"]=activity["LightlyActiveMinutes"].astype("float")
 regression_light_activity = smf.ols(formula="Calories~LightlyActiveMinutes", data=activity).fit()
-print(regression_light_activity.summary())
+#print(regression_light_activity.summary())
 
 def plot_light_activity_regression(activity):
     plt.figure(figsize=(8, 6))
@@ -151,7 +151,7 @@ def plot_light_activity_regression(activity):
     plt.legend()
     plt.show()
 
-plot_light_activity_regression(activity)
+# plot_light_activity_regression(activity)
 #as the plot shows, theres a slight effect of light activity on calories.
 #no high burn of calories is recorded with a high number of lightly active minutes
 
@@ -173,6 +173,33 @@ def most_common_act(df):
 
     return most_common, types[most_common]
 
-most_common_act(activity)
+# most_common_act(activity)
 #as one would expect, the most common activity is sedentary
 
+# PART 3 ####################################################
+
+print('\n\n\nPART 3\n\n\n')
+
+conection = sqlite3.connect('DENG/fitbit_database.db')
+cursor = conection.cursor()
+
+query = "SELECT Id, COUNT(Id) FROM daily_activity GROUP BY Id"
+df_activity = pd.read_sql_query(query, conection)
+print(df_activity.head())
+
+df_activity["Id"] = df_activity["Id"].astype(int)
+
+def classify_user(count):
+    if count <= 10:
+        return "Light user"
+    elif count <= 15:
+        return "Moderate user"
+    else:
+        return "Heavy user"
+
+df_activity["Class"] = df_activity[df_activity.columns[1]].apply(classify_user)
+result_df = df_activity[["Id", "Class"]]
+
+conection.close()
+
+print(result_df.head())
