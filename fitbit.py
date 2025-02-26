@@ -272,7 +272,6 @@ def plotregression_sedentary(sleep_and_minutes):
     plt.show()
 
 plotregression_sedentary(sleep_and_minutes)
-<<<<<<< HEAD
 #the regression shows a low negative relationship
 
 #Q Q plot to verify data is normally distributed
@@ -290,6 +289,3 @@ def qqnormality(regression_model):
 
 qqnormality(regression_sedentary_minutes)
 #errors seem to be normally distributed
-=======
-
->>>>>>> c18702d42771a319308950c734c2a08a7c7434ff
