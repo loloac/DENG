@@ -200,6 +200,75 @@ def classify_user(count):
 df_activity["Class"] = df_activity[df_activity.columns[1]].apply(classify_user)
 result_df = df_activity[["Id", "Class"]]
 
-conection.close()
-
 print(result_df.head())
+
+
+
+#whether duration of sleep is related to active minutes
+query="SELECT * FROM minute_sleep"
+minute_sleep=pd.read_sql_query(query,conection)
+
+
+query="SELECT * from daily_activity"
+daily_activity=pd.read_sql_query(query,conection)
+
+
+#total active minutes column
+daily_activity['TotalActiveMinutes'] = daily_activity['LightlyActiveMinutes'] + daily_activity['FairlyActiveMinutes']+daily_activity['VeryActiveMinutes']
+
+
+minute_sleep['Date'] = pd.to_datetime(minute_sleep['date'], format='%m/%d/%Y %I:%M:%S %p').dt.date
+
+# sum all value 1's for each Id/day to get the total minutes of sleep
+sleep_sum = minute_sleep[minute_sleep['value'] == 1].groupby(['Id', 'Date'])['value'].sum().reset_index()
+
+
+sleep_sum['Id'] = sleep_sum['Id'].astype(int)
+daily_activity['Id'] = daily_activity['Id'].astype(int)
+#rename the date column to match sleep table
+daily_activity['ActivityDate'] = pd.to_datetime(daily_activity['ActivityDate'], format='%m/%d/%Y').dt.strftime('%Y-%m-%d')
+daily_activity.rename(columns={'ActivityDate': 'Date'}, inplace=True)
+sleep_sum['Date'] = pd.to_datetime(sleep_sum['Date']).dt.strftime('%Y-%m-%d')
+
+#finding the intersection of ids and dates in order to make the regression
+common_ids_dates = set(sleep_sum[['Id', 'Date']].apply(tuple, axis=1)).intersection(set(daily_activity[['Id', 'Date']].apply(tuple, axis=1)))
+#filtering the df´s
+sleep_sum = sleep_sum[sleep_sum[['Id', 'Date']].apply(tuple, axis=1).isin(common_ids_dates)]
+daily_activity = daily_activity[daily_activity[['Id', 'Date']].apply(tuple, axis=1).isin(common_ids_dates)]
+
+sleep_and_minutes = pd.merge(sleep_sum, daily_activity, on=['Id', 'Date'])
+
+#linear regression to see if there is a relationship between total active minutes and sleep
+
+regression_active_minutes = smf.ols(formula="value ~ TotalActiveMinutes", data=sleep_and_minutes).fit()
+print(regression_active_minutes.summary())
+
+def plotregression(sleep_and_minutes):
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x=sleep_and_minutes["TotalActiveMinutes"], y=sleep_and_minutes["value"], label="data")
+    sns.lineplot(x=sleep_and_minutes["TotalActiveMinutes"], y=regression_active_minutes.predict(sleep_and_minutes["TotalActiveMinutes"]), color='red')
+    plt.xlabel("Total Active Minutes")
+    plt.ylabel("Sleep minutes")
+    plt.title("Effect of Total Active Minutes on sleep minutes")
+    plt.legend()
+    plt.show()
+
+plotregression(sleep_and_minutes)
+
+#the regression shows hardly any relationship btw sleep and minutes
+#------------------------------------------------------------
+#effects of sedentary minutes on sleep
+regression_sedentary_minutes = smf.ols(formula="value ~ SedentaryMinutes", data=sleep_and_minutes).fit()
+print(regression_sedentary_minutes.summary())
+
+def plotregression_sedentary(sleep_and_minutes):
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x=sleep_and_minutes["SedentaryMinutes"], y=sleep_and_minutes["value"], label="data")
+    sns.lineplot(x=sleep_and_minutes["SedentaryMinutes"], y=regression_sedentary_minutes.predict(sleep_and_minutes["SedentaryMinutes"]), color='red')
+    plt.xlabel("Sedentary Minutes")
+    plt.ylabel("Sleep minutes")
+    plt.title("Effect of Sedentary Minutes on sleep minutes")
+    plt.legend()
+    plt.show()
+
+plotregression_sedentary(sleep_and_minutes)
