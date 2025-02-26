@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import statsmodels.formula.api as smf
 import seaborn as sns
 import sqlite3
-
+import scipy.stats as stats
 file = 'DENG/daily_acivity.csv'
 
 def read_csv_file(file):
@@ -272,4 +272,20 @@ def plotregression_sedentary(sleep_and_minutes):
     plt.show()
 
 plotregression_sedentary(sleep_and_minutes)
+#the regression shows a low negative relationship
 
+#Q Q plot to verify data is normally distributed
+
+
+def qqnormality(regression_model):
+    residuals = regression_model.resid
+    plt.figure(figsize=(8, 6))
+    stats.probplot(residuals, dist="norm", plot=plt)
+    plt.title('Q-Q Plot')
+    plt.xlabel('Theoretical Quantiles')
+    plt.ylabel('Sample Quantiles')
+
+    plt.show()
+
+qqnormality(regression_sedentary_minutes)
+#errors seem to be normally distributed
