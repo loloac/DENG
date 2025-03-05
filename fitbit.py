@@ -354,3 +354,65 @@ plt.xticks(rotation=45)
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 plt.tight_layout()
 plt.show()
+
+#weather relationship to activity
+weather=pd.read_csv("DENG/chicago.csv")
+weather=weather[["datetime","temp","precip"]]
+
+activitee = sleep_and_minutes[["Id", "Date", "TotalActiveMinutes"]]
+
+#ensuring the date formats match
+weather['datetime'] = pd.to_datetime(weather['datetime'], format='%Y-%m-%d')
+activitee['Date'] = pd.to_datetime(activitee['Date'], format='%Y-%m-%d')
+
+#merging the weather and activity dataframes on the date
+merged_df = pd.merge(activitee, weather, left_on='Date', right_on='datetime')
+print(merged_df.head())
+def plot_weather_vs_activity(merged_df):
+    plt.figure(figsize=(14, 6))
+
+    # Precipitation vs Active Minutes
+    plt.subplot(1, 2, 1)
+    sns.scatterplot(x=merged_df['precip'], y=merged_df['TotalActiveMinutes'], label="data")
+    sns.lineplot(x=merged_df['precip'], y=smf.ols(formula="TotalActiveMinutes ~ precip", data=merged_df).fit().predict(merged_df['precip']), color='red')
+    plt.xlabel("Precipitation")
+    plt.ylabel("Total Active Minutes")
+    plt.title("Total Active Minutes vs Precipitation")
+    plt.legend()
+
+    # Temperature vs Active Minutes
+    plt.subplot(1, 2, 2)
+    sns.scatterplot(x=merged_df['temp'], y=merged_df['TotalActiveMinutes'], label="data")
+    sns.lineplot(x=merged_df['temp'], y=smf.ols(formula="TotalActiveMinutes ~ temp", data=merged_df).fit().predict(merged_df['temp']), color='red')
+    plt.xlabel("Temperature")
+    plt.ylabel("Total Active Minutes")
+    plt.title("Total Active Minutes vs Temperature")
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+#plot_weather_vs_activity(merged_df)
+
+#prof said we should do an interaction plot as well... unfinished business
+
+
+#PART 4 - DATA WRANGLING ####################################################
+query="SELECT * FROM weight_log"
+weight_log=pd.read_sql_query(query,conection)
+print(weight_log.head())
+# length
+print(weight_log.shape) #33 rows and 4 columns
+
+missing_values = weight_log.isnull().sum()
+print("Missing values per column in weight_log:")
+print(missing_values)
+
+#31 missing values in fat out of 33
+#2 out of 33 in weight kg
+#replacing weight kg with weight pounds times 0.453592(1 pound = 0.453592 kg)
+weight_log['WeightKg']=weight_log['WeightKg'].fillna(weight_log['WeightPounds']*0.453592)
+#for fat, we only have 2 values out of 33. therefore, we can drop the column
+weight_log.drop('Fat',axis=1,inplace=True)
+
+#---------
