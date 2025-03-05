@@ -8,7 +8,7 @@ import statsmodels.formula.api as smf
 import seaborn as sns
 import sqlite3
 import scipy.stats as stats
-file = 'DENG/daily_acivity.csv'
+file = 'daily_acivity.csv'
 
 def read_csv_file(file):
     df = pd.read_csv(file)
@@ -106,7 +106,7 @@ df = read_csv_file(file)
 
 
 
-activity=pd.read_csv("DENG/daily_acivity.csv")
+activity=pd.read_csv("daily_acivity.csv")
 activity.head()
 
 activity["Id"]=activity["Id"].astype("category")
@@ -180,7 +180,7 @@ def most_common_act(df):
 
 print('\n\n\nPART 3\n\n\n')
 
-conection = sqlite3.connect('DENG/fitbit_database.db')
+conection = sqlite3.connect('fitbit_database.db')
 cursor = conection.cursor()
 
 query = "SELECT Id, COUNT(Id) FROM daily_activity GROUP BY Id"
@@ -289,3 +289,68 @@ def qqnormality(regression_model):
 
 qqnormality(regression_sedentary_minutes)
 #errors seem to be normally distributed
+
+#Dividing the database in blocks of 4 hours
+hourlySteps = pd.read_sql_query("SELECT * FROM hourly_steps", conection)
+hourlySteps['ActivityHour'] = pd.to_datetime(hourlySteps['ActivityHour'])
+def assignTimeBlock(hour):
+    if 0 <= hour < 4:
+        return '0-4'
+    elif 4 <= hour < 8:
+        return '4-8'
+    elif 8 <= hour < 12:
+        return '8-12'
+    elif 12 <= hour < 16:
+        return '12-16'
+    elif 16 <= hour < 20:
+        return '16-20'
+    else:
+        return '20-24'
+hourlySteps['TimeBlock'] = hourlySteps['ActivityHour'].dt.hour.apply(assignTimeBlock)
+averageStepsBlock = hourlySteps.groupby('TimeBlock')['StepTotal'].mean()
+
+#Barplot for average number of steps
+plt.figure(figsize=(10, 6))
+averageStepsBlock = averageStepsBlock.reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
+averageStepsBlock.plot(kind='bar', color='skyblue', edgecolor='black')
+plt.xlabel('Time Block (Hours)')
+plt.ylabel('Average Steps')
+plt.title('Average Steps Taken in 4-Hour Blocks')
+plt.xticks(rotation=45)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+#Barplot for average calories burnt
+hourlyCalories = pd.read_sql_query("SELECT * FROM hourly_calories", conection)
+hourlyCalories['ActivityHour'] = pd.to_datetime(hourlyCalories['ActivityHour'], format='%m/%d/%Y %I:%M:%S %p')
+hourlyCalories['TimeBlock'] = hourlyCalories['ActivityHour'].dt.hour.apply(assignTimeBlock)
+timeblock_avg_calories = hourlyCalories.groupby('TimeBlock')['Calories'].mean().reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
+plt.figure(figsize=(10, 6))
+timeblock_avg_calories.plot(kind='bar', color='lightcoral', edgecolor='black')
+plt.xlabel('Time Block (Hours)')
+plt.ylabel('Average Calories Burned')
+plt.title('Average Calories Burned per 4-Hour Block')
+plt.xticks(rotation=45)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+#According to the dataset, it makes sense how the average calories are burnt throughout the 6 blocks of 
+#4 hours, it also makes sense that calories are burnt at times where the user might be sleeping,
+#this is because you also burn calories when you sleep.
+
+#Barplot for average sleep
+df_sleep = pd.read_sql_query("SELECT * FROM minute_sleep", conection)
+# Convert the date column to full day
+df_sleep['date'] = pd.to_datetime(df_sleep['date'], format='%m/%d/%Y %I:%M:%S %p')
+df_sleep['TimeBlock'] = df_sleep['date'].dt.hour.apply(assignTimeBlock)
+timeblock_total_sleep = df_sleep.groupby('TimeBlock')['value'].sum().reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
+plt.figure(figsize=(10, 6))
+timeblock_total_sleep.plot(kind='bar', color='mediumseagreen', edgecolor='black')
+plt.xlabel('Time Block (Hours)')
+plt.ylabel('Total Sleep Minutes')
+plt.title('Total Sleep Minutes per 4-Hour Block')
+plt.xticks(rotation=45)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
