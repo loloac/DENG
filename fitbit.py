@@ -411,7 +411,7 @@ print(missing_values)
 #31 missing values in fat out of 33
 #2 out of 33 in weight kg
 #replacing weight kg with weight pounds times 0.453592(1 pound = 0.453592 kg)
-weight_log['WeightKg']=weight_log['WeightKg'].fillna(weight_log['WeightPounds']*0.453592)
+weight_log['WeightKg']=weight_log['WeightKg'].fillna(weight_log['WeightPounds']/0.453592)
 #for fat, we only have 2 values out of 33. therefore, we can drop the column
 weight_log.drop('Fat',axis=1,inplace=True)
 
