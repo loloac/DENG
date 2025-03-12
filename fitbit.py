@@ -396,6 +396,47 @@ def plot_weather_vs_activity(merged_df):
 
 #prof said we should do an interaction plot as well... unfinished business
 
+# Write a function that takes an Id as input and returns a figure that contains
+# heart rate of this individual and the total intensity of the exercise taken
+
+def plot_heart_rate_intensity(id):
+    conection = sqlite3.connect('fitbit_database.db')
+    
+    query = f"SELECT * FROM heart_rate WHERE Id = {id}"
+    heart_rate = pd.read_sql_query(query, conection)
+
+    query = f"SELECT * FROM hourly_intensity WHERE Id = {id}"
+    hourly_intensity = pd.read_sql_query(query, conection)
+
+    heart_rate['Time'] = pd.to_datetime(heart_rate['Time'], format='%m/%d/%Y %I:%M:%S %p')
+    hourly_intensity['ActivityHour'] = pd.to_datetime(hourly_intensity['ActivityHour'], format='%m/%d/%Y %I:%M:%S %p')
+    
+    # Calculate average heart rate per hour
+    heart_rate['Hour'] = heart_rate['Time'].dt.floor('H')
+    avg_heart_rate_per_hour = heart_rate.groupby('Hour')['Value'].mean().reset_index()
+    avg_heart_rate_per_hour.rename(columns={'Value': 'AvgHeartRate'}, inplace=True)
+    
+    # Merge average heart rate with hourly intensity
+    merged_df = pd.merge(avg_heart_rate_per_hour, hourly_intensity, left_on='Hour', right_on='ActivityHour')
+    
+    # Plot the graph
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+    
+    ax1.set_xlabel('Hour')
+    ax1.set_ylabel('Average Heart Rate', color='tab:blue')
+    ax1.plot(merged_df['Hour'], merged_df['AvgHeartRate'], label='Average Heart Rate', color='tab:blue')
+    ax1.tick_params(axis='y', labelcolor='tab:blue')
+    
+    ax2 = ax1.twinx()
+    ax2.set_ylabel('Total Intensity', color='tab:red')
+    ax2.plot(merged_df['Hour'], merged_df['TotalIntensity'], label='Total Intensity', color='tab:red')
+    ax2.tick_params(axis='y', labelcolor='tab:red')
+    
+    fig.tight_layout()
+    plt.title(f"Average Heart Rate and Total Intensity per Hour by user {id}")
+    plt.show()
+
+plot_heart_rate_intensity(4558609924)
 
 #PART 4 - DATA WRANGLING ####################################################
 query="SELECT * FROM weight_log"
