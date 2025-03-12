@@ -8,7 +8,8 @@ import statsmodels.formula.api as smf
 import seaborn as sns
 import sqlite3
 import scipy.stats as stats
-file = 'DENG/daily_acivity.csv'
+
+file = 'daily_acivity.csv'
 
 def read_csv_file(file):
     df = pd.read_csv(file)
@@ -175,6 +176,7 @@ def most_common_act(df):
 
 # most_common_act(activity)
 #as one would expect, the most common activity is sedentary
+# Fetching all table names from the database
 
 # PART 3 ####################################################
 
