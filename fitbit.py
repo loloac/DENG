@@ -8,7 +8,7 @@ import statsmodels.formula.api as smf
 import seaborn as sns
 import sqlite3
 import scipy.stats as stats
-file = 'DENG/daily_acivity.csv'
+file = 'daily_acivity.csv'
 
 def read_csv_file(file):
     df = pd.read_csv(file)
@@ -106,7 +106,7 @@ df = read_csv_file(file)
 
 
 
-activity=pd.read_csv("DENG/daily_acivity.csv")
+activity=pd.read_csv("daily_acivity.csv")
 activity.head()
 
 activity["Id"]=activity["Id"].astype("category")
@@ -180,7 +180,7 @@ def most_common_act(df):
 
 print('\n\n\nPART 3\n\n\n')
 
-conection = sqlite3.connect('DENG/fitbit_database.db')
+conection = sqlite3.connect('fitbit_database.db')
 cursor = conection.cursor()
 
 query = "SELECT Id, COUNT(Id) FROM daily_activity GROUP BY Id"
@@ -289,3 +289,130 @@ def qqnormality(regression_model):
 
 qqnormality(regression_sedentary_minutes)
 #errors seem to be normally distributed
+
+#Dividing the database in blocks of 4 hours
+hourlySteps = pd.read_sql_query("SELECT * FROM hourly_steps", conection)
+hourlySteps['ActivityHour'] = pd.to_datetime(hourlySteps['ActivityHour'])
+def assignTimeBlock(hour):
+    if 0 <= hour < 4:
+        return '0-4'
+    elif 4 <= hour < 8:
+        return '4-8'
+    elif 8 <= hour < 12:
+        return '8-12'
+    elif 12 <= hour < 16:
+        return '12-16'
+    elif 16 <= hour < 20:
+        return '16-20'
+    else:
+        return '20-24'
+hourlySteps['TimeBlock'] = hourlySteps['ActivityHour'].dt.hour.apply(assignTimeBlock)
+averageStepsBlock = hourlySteps.groupby('TimeBlock')['StepTotal'].mean()
+
+#Barplot for average number of steps
+plt.figure(figsize=(10, 6))
+averageStepsBlock = averageStepsBlock.reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
+averageStepsBlock.plot(kind='bar', color='skyblue', edgecolor='black')
+plt.xlabel('Time Block (Hours)')
+plt.ylabel('Average Steps')
+plt.title('Average Steps Taken in 4-Hour Blocks')
+plt.xticks(rotation=45)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+#Barplot for average calories burnt
+hourlyCalories = pd.read_sql_query("SELECT * FROM hourly_calories", conection)
+hourlyCalories['ActivityHour'] = pd.to_datetime(hourlyCalories['ActivityHour'], format='%m/%d/%Y %I:%M:%S %p')
+hourlyCalories['TimeBlock'] = hourlyCalories['ActivityHour'].dt.hour.apply(assignTimeBlock)
+timeblock_avg_calories = hourlyCalories.groupby('TimeBlock')['Calories'].mean().reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
+plt.figure(figsize=(10, 6))
+timeblock_avg_calories.plot(kind='bar', color='lightcoral', edgecolor='black')
+plt.xlabel('Time Block (Hours)')
+plt.ylabel('Average Calories Burned')
+plt.title('Average Calories Burned per 4-Hour Block')
+plt.xticks(rotation=45)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+#According to the dataset, it makes sense how the average calories are burnt throughout the 6 blocks of 
+#4 hours, it also makes sense that calories are burnt at times where the user might be sleeping,
+#this is because you also burn calories when you sleep.
+
+#Barplot for average sleep
+df_sleep = pd.read_sql_query("SELECT * FROM minute_sleep", conection)
+# Convert the date column to full day
+df_sleep['date'] = pd.to_datetime(df_sleep['date'], format='%m/%d/%Y %I:%M:%S %p')
+df_sleep['TimeBlock'] = df_sleep['date'].dt.hour.apply(assignTimeBlock)
+timeblock_total_sleep = df_sleep.groupby('TimeBlock')['value'].sum().reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
+plt.figure(figsize=(10, 6))
+timeblock_total_sleep.plot(kind='bar', color='mediumseagreen', edgecolor='black')
+plt.xlabel('Time Block (Hours)')
+plt.ylabel('Total Sleep Minutes')
+plt.title('Total Sleep Minutes per 4-Hour Block')
+plt.xticks(rotation=45)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+#weather relationship to activity
+weather=pd.read_csv("DENG/chicago.csv")
+weather=weather[["datetime","temp","precip"]]
+
+activitee = sleep_and_minutes[["Id", "Date", "TotalActiveMinutes"]]
+
+#ensuring the date formats match
+weather['datetime'] = pd.to_datetime(weather['datetime'], format='%Y-%m-%d')
+activitee['Date'] = pd.to_datetime(activitee['Date'], format='%Y-%m-%d')
+
+#merging the weather and activity dataframes on the date
+merged_df = pd.merge(activitee, weather, left_on='Date', right_on='datetime')
+print(merged_df.head())
+def plot_weather_vs_activity(merged_df):
+    plt.figure(figsize=(14, 6))
+
+    # Precipitation vs Active Minutes
+    plt.subplot(1, 2, 1)
+    sns.scatterplot(x=merged_df['precip'], y=merged_df['TotalActiveMinutes'], label="data")
+    sns.lineplot(x=merged_df['precip'], y=smf.ols(formula="TotalActiveMinutes ~ precip", data=merged_df).fit().predict(merged_df['precip']), color='red')
+    plt.xlabel("Precipitation")
+    plt.ylabel("Total Active Minutes")
+    plt.title("Total Active Minutes vs Precipitation")
+    plt.legend()
+
+    # Temperature vs Active Minutes
+    plt.subplot(1, 2, 2)
+    sns.scatterplot(x=merged_df['temp'], y=merged_df['TotalActiveMinutes'], label="data")
+    sns.lineplot(x=merged_df['temp'], y=smf.ols(formula="TotalActiveMinutes ~ temp", data=merged_df).fit().predict(merged_df['temp']), color='red')
+    plt.xlabel("Temperature")
+    plt.ylabel("Total Active Minutes")
+    plt.title("Total Active Minutes vs Temperature")
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+#plot_weather_vs_activity(merged_df)
+
+#prof said we should do an interaction plot as well... unfinished business
+
+
+#PART 4 - DATA WRANGLING ####################################################
+query="SELECT * FROM weight_log"
+weight_log=pd.read_sql_query(query,conection)
+print(weight_log.head())
+# length
+print(weight_log.shape) #33 rows and 4 columns
+
+missing_values = weight_log.isnull().sum()
+print("Missing values per column in weight_log:")
+print(missing_values)
+
+#31 missing values in fat out of 33
+#2 out of 33 in weight kg
+#replacing weight kg with weight pounds times 0.453592(1 pound = 0.453592 kg)
+weight_log['WeightKg']=weight_log['WeightKg'].fillna(weight_log['WeightPounds']/0.453592)
+#for fat, we only have 2 values out of 33. therefore, we can drop the column
+weight_log.drop('Fat',axis=1,inplace=True)
+
+#---------
