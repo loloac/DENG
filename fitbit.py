@@ -8,7 +8,8 @@ import statsmodels.formula.api as smf
 import seaborn as sns
 import sqlite3
 import scipy.stats as stats
-file = 'daily_acivity.csv'
+import streamlit as st
+file = 'daily_acivity.csv' # DENG/
 
 def read_csv_file(file):
     df = pd.read_csv(file)
@@ -106,13 +107,13 @@ df = read_csv_file(file)
 
 
 
-activity=pd.read_csv("daily_acivity.csv")
+activity=pd.read_csv("daily_acivity.csv")  # DENG/
 activity.head()
 
 activity["Id"]=activity["Id"].astype("category")
 activity.columns
 
-#regression=smf.ols(formula="Calories~TotalSteps+Id",data=activity).fit()
+caloriesvstotalsteps=smf.ols(formula="Calories~TotalSteps+Id",data=activity).fit()
 #print(regression.summary())
 #this linear regression shows the relationship between calories burnt and total steps taken by a given user
 
@@ -158,29 +159,29 @@ def plot_light_activity_regression(activity):
 #shows time spent on each activity type
 def most_common_act(df):
     types = df[['VeryActiveMinutes', 'FairlyActiveMinutes', 'LightlyActiveMinutes', 'SedentaryMinutes']].sum()
-    most_common = types.idxmax()
     types.index = ['Very Active', 'Fairly Active', 'Lightly Active', 'Sedentary']
-    plt.figure(figsize=(12, 6))
-    types.plot(kind='bar', color='skyblue', edgecolor='black')
     
-    plt.xlabel("Activity Type")
-    plt.ylabel("Total Minutes")
-    plt.title("Total Minutes Spent on Each Activity Type")
-    plt.xticks(rotation=45, ha='right')
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    types.plot(kind='bar', color='skyblue', edgecolor='black', ax=ax)
+    
+    ax.set_xlabel("Activity Type")
+    ax.set_ylabel("Total Minutes")
+    ax.set_title("Total Minutes Spent on Each Activity Type")
+    ax.set_xticklabels(types.index, rotation=45, ha='right')
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
     plt.tight_layout()
-    plt.show()
+    
+    st.pyplot(fig)
 
-    return most_common, types[most_common]
-
-# most_common_act(activity)
+print("HEREEEEEEEE",most_common_act(activity))
 #as one would expect, the most common activity is sedentary
+# Fetching all table names from the database
 
 # PART 3 ####################################################
 
 print('\n\n\nPART 3\n\n\n')
 
-conection = sqlite3.connect('fitbit_database.db')
+conection = sqlite3.connect('DENG/fitbit_database.db')
 cursor = conection.cursor()
 
 query = "SELECT Id, COUNT(Id) FROM daily_activity GROUP BY Id"
@@ -198,9 +199,9 @@ def classify_user(count):
         return "Heavy user"
 
 df_activity["Class"] = df_activity[df_activity.columns[1]].apply(classify_user)
-result_df = df_activity[["Id", "Class"]]
+classified_df = df_activity[["Id", "Class"]]
 
-print(result_df.head())
+print(classified_df.head())
 
 
 
@@ -400,7 +401,7 @@ def plot_weather_vs_activity(merged_df):
 # heart rate of this individual and the total intensity of the exercise taken
 
 def plot_heart_rate_intensity(id):
-    conection = sqlite3.connect('fitbit_database.db')
+    conection = sqlite3.connect('DENG/fitbit_database.db')
     
     query = f"SELECT * FROM heart_rate WHERE Id = {id}"
     heart_rate = pd.read_sql_query(query, conection)
@@ -410,31 +411,32 @@ def plot_heart_rate_intensity(id):
 
     heart_rate['Time'] = pd.to_datetime(heart_rate['Time'], format='%m/%d/%Y %I:%M:%S %p')
     hourly_intensity['ActivityHour'] = pd.to_datetime(hourly_intensity['ActivityHour'], format='%m/%d/%Y %I:%M:%S %p')
-    
-    # Calculate average heart rate per hour
+
     heart_rate['Hour'] = heart_rate['Time'].dt.floor('H')
     avg_heart_rate_per_hour = heart_rate.groupby('Hour')['Value'].mean().reset_index()
     avg_heart_rate_per_hour.rename(columns={'Value': 'AvgHeartRate'}, inplace=True)
-    
-    # Merge average heart rate with hourly intensity
+
     merged_df = pd.merge(avg_heart_rate_per_hour, hourly_intensity, left_on='Hour', right_on='ActivityHour')
-    
-    # Plot the graph
+
+    if merged_df.empty:
+        return f"Unfortunately, there is no overlapping data for user {id}."
+
     fig, ax1 = plt.subplots(figsize=(12, 6))
-    
-    ax1.set_xlabel('Hour')
+
+    ax1.set_xlabel('Date')
     ax1.set_ylabel('Average Heart Rate', color='tab:blue')
     ax1.plot(merged_df['Hour'], merged_df['AvgHeartRate'], label='Average Heart Rate', color='tab:blue')
     ax1.tick_params(axis='y', labelcolor='tab:blue')
-    
+
     ax2 = ax1.twinx()
     ax2.set_ylabel('Total Intensity', color='tab:red')
     ax2.plot(merged_df['Hour'], merged_df['TotalIntensity'], label='Total Intensity', color='tab:red')
     ax2.tick_params(axis='y', labelcolor='tab:red')
-    
+
     fig.tight_layout()
-    plt.title(f"Average Heart Rate and Total Intensity per Hour by user {id}")
-    plt.show()
+    plt.title(f"Average Heart Rate and Total Intensity per Hour - User {id}")
+
+    return fig
 
 plot_heart_rate_intensity(4558609924)
 
@@ -590,3 +592,4 @@ def plot_intensity_sleep_correlation(id):
     #
 plot_intensity_sleep_correlation(1503960366)
 #---------
+
