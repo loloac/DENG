@@ -9,7 +9,7 @@ import seaborn as sns
 import sqlite3
 import scipy.stats as stats
 import streamlit as st
-file = 'daily_acivity.csv'
+file = 'daily_acivity.csv' # DENG/
 
 def read_csv_file(file):
     df = pd.read_csv(file)
@@ -107,7 +107,7 @@ df = read_csv_file(file)
 
 
 
-activity=pd.read_csv("daily_acivity.csv")
+activity=pd.read_csv("daily_acivity.csv")  # DENG/
 activity.head()
 
 activity["Id"]=activity["Id"].astype("category")
@@ -411,31 +411,32 @@ def plot_heart_rate_intensity(id):
 
     heart_rate['Time'] = pd.to_datetime(heart_rate['Time'], format='%m/%d/%Y %I:%M:%S %p')
     hourly_intensity['ActivityHour'] = pd.to_datetime(hourly_intensity['ActivityHour'], format='%m/%d/%Y %I:%M:%S %p')
-    
-    # Calculate average heart rate per hour
+
     heart_rate['Hour'] = heart_rate['Time'].dt.floor('H')
     avg_heart_rate_per_hour = heart_rate.groupby('Hour')['Value'].mean().reset_index()
     avg_heart_rate_per_hour.rename(columns={'Value': 'AvgHeartRate'}, inplace=True)
-    
-    # Merge average heart rate with hourly intensity
+
     merged_df = pd.merge(avg_heart_rate_per_hour, hourly_intensity, left_on='Hour', right_on='ActivityHour')
-    
-    # Plot the graph
+
+    if merged_df.empty:
+        return f"Unfortunately, there is no overlapping data for user {id}."
+
     fig, ax1 = plt.subplots(figsize=(12, 6))
-    
-    ax1.set_xlabel('Hour')
+
+    ax1.set_xlabel('Date')
     ax1.set_ylabel('Average Heart Rate', color='tab:blue')
     ax1.plot(merged_df['Hour'], merged_df['AvgHeartRate'], label='Average Heart Rate', color='tab:blue')
     ax1.tick_params(axis='y', labelcolor='tab:blue')
-    
+
     ax2 = ax1.twinx()
     ax2.set_ylabel('Total Intensity', color='tab:red')
     ax2.plot(merged_df['Hour'], merged_df['TotalIntensity'], label='Total Intensity', color='tab:red')
     ax2.tick_params(axis='y', labelcolor='tab:red')
-    
+
     fig.tight_layout()
-    plt.title(f"Average Heart Rate and Total Intensity per Hour by user {id}")
-    plt.show()
+    plt.title(f"Average Heart Rate and Total Intensity per Hour - User {id}")
+
+    return fig
 
 plot_heart_rate_intensity(4558609924)
 

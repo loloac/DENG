@@ -22,7 +22,7 @@ df = pd.read_sql_query(query, conn)
 conn.close()
 
 
-
+st.title("Fitbit Dashboard")
 
 df['TotalActiveMinutes'] = df['LightlyActiveMinutes'] + df['VeryActiveMinutes'] + df['FairlyActiveMinutes']
 gen=st.sidebar.button("General Stats")
@@ -80,9 +80,10 @@ if gen: #theres a bug here where a long deleted table still appears. if you reru
 ######HERE in the if add the code for general statistics
 
 elif selected_id != 'Select Id' and not gen and not date_range_button:
-    
+    st.header(f"Showing the Data from ID {selected_id}")
 
     # Plot TotalActiveMinutes vs Calories for all dates for the selected Id
+    st.write("Total Active Minutes vs Calories")
     fig, ax = plt.subplots()
     for date, group in filtered_df.groupby('ActivityDate'):
         ax.scatter(group['TotalActiveMinutes'], group['Calories'], label=date)
@@ -96,6 +97,22 @@ elif selected_id != 'Select Id' and not gen and not date_range_button:
     ax.set_title(f'Total Active Minutes vs Calories for Id {selected_id}')
     ax.legend(title='Activity Date', bbox_to_anchor=(1.05, 1), loc='upper left')
     st.pyplot(fig)
+
+    # Plot Heart Rate Intensity
+    plot_heart_rate, ax = plt.subplots()
+    from fitbit import plot_heart_rate_intensity 
+    plot_heart_rate = plot_heart_rate_intensity(selected_id)
+
+    st.write("Avarage Heart Rate and Total Intensity")
+    # Check if the function returned a string (no overlapping data)
+    if isinstance(plot_heart_rate, str):
+        st.warning(plot_heart_rate)  # Display the message as a warning
+    else:
+        st.pyplot(plot_heart_rate)  # Display the plot if data exists
+
+    # Sleep related data
+    st.subheader("Sleep Related Data")
+
 ######HERE in the if add the code for ID specific data, using filtered_df
 elif date_range_button:
     selected_id="Select Id"
