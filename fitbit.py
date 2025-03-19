@@ -587,6 +587,6 @@ def plot_intensity_sleep_correlation(id):
     plt.title(f"Average Intensity vs Sleep Minutes for ID: {id}")
     plt.tight_layout()
     plt.show()
-    
+    #
 plot_intensity_sleep_correlation(1503960366)
 #---------
