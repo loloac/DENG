@@ -26,7 +26,7 @@ df['TotalActiveMinutes'] = df['LightlyActiveMinutes'] + df['VeryActiveMinutes'] 
 unique_ids = df['Id'].unique()
 selected_id = st.sidebar.selectbox('See data by Id', unique_ids)
 selected_time=st.sidebar.selectbox('See data by Day',times)
-# Filter data based on selected Id
+# Filtering data based on selected Id
 filtered_df = df[df['Id'] == selected_id]
 
 
