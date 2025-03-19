@@ -545,10 +545,48 @@ def plot_very_active_sleep_correlation(id):
     plt.show()
 plot_very_active_sleep_correlation(1503960366)
 
-def plot_intesity_sleep_correlation(id):
+def plot_intensity_sleep_correlation(id):
     connection = sqlite3.connect('fitbit_database.db')
+    
     query = f"SELECT * FROM hourly_intensity WHERE Id = {id}"
     hourly_intensity = pd.read_sql_query(query, connection)
     query = f"SELECT * FROM minute_sleep WHERE Id = {id}"
-    minute_sleep['Date'] = pd.to_datetime(minute_sleep['date']).to.date
+    minute_sleep = pd.read_sql_query(query, connection)
+    
+    minute_sleep['Date'] = pd.to_datetime(minute_sleep['date']).dt.date
+    hourly_intensity['Date'] = pd.to_datetime(hourly_intensity['ActivityHour']).dt.date
+    
+    sleep_by_date = minute_sleep.groupby('Date').size().reset_index(name='SleepMinutes')
+    intensity_by_date = hourly_intensity.groupby('Date')['AverageIntensity'].mean().reset_index()
+
+    merged_df = pd.merge(sleep_by_date, intensity_by_date, on='Date', how='inner')
+    merged_df['DateStr'] = merged_df['Date'].astype(str)
+    
+    fig, ax1 = plt.subplots(figsize=(14, 8))
+    
+    x = merged_df['DateStr']
+    x_pos = np.arange(len(x))
+    width = 0.35
+    
+    bars1 = ax1.bar(x_pos - width/2, merged_df['AverageIntensity'], width, color='tab:blue', label='AverageIntensity')
+    ax1.set_ylabel('Average Intensity', color='tab:blue')
+    ax1.tick_params(axis='y', labelcolor='tab:blue')
+    
+    ax2 = ax1.twinx()
+    bars2 = ax2.bar(x_pos + width/2, merged_df['SleepMinutes'], width, color='tab:red', label='Sleep')
+    ax2.set_ylabel('Sleep Minutes', color='tab:red')
+    ax2.tick_params(axis='y', labelcolor='tab:red')
+    ax1.set_xlabel('Date')
+    ax1.set_xticks(x_pos)
+    ax1.set_xticklabels(x, rotation=45, ha='right')
+    
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='best')
+    
+    plt.title(f"Average Intensity vs Sleep Minutes for ID: {id}")
+    plt.tight_layout()
+    plt.show()
+    
+plot_intensity_sleep_correlation(1503960366)
 #---------
