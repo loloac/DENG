@@ -8,6 +8,7 @@ import statsmodels.formula.api as smf
 import seaborn as sns
 import sqlite3
 import scipy.stats as stats
+import streamlit as st
 file = 'daily_acivity.csv'
 
 def read_csv_file(file):
@@ -112,7 +113,7 @@ activity.head()
 activity["Id"]=activity["Id"].astype("category")
 activity.columns
 
-#regression=smf.ols(formula="Calories~TotalSteps+Id",data=activity).fit()
+caloriesvstotalsteps=smf.ols(formula="Calories~TotalSteps+Id",data=activity).fit()
 #print(regression.summary())
 #this linear regression shows the relationship between calories burnt and total steps taken by a given user
 
@@ -158,29 +159,29 @@ def plot_light_activity_regression(activity):
 #shows time spent on each activity type
 def most_common_act(df):
     types = df[['VeryActiveMinutes', 'FairlyActiveMinutes', 'LightlyActiveMinutes', 'SedentaryMinutes']].sum()
-    most_common = types.idxmax()
     types.index = ['Very Active', 'Fairly Active', 'Lightly Active', 'Sedentary']
-    plt.figure(figsize=(12, 6))
-    types.plot(kind='bar', color='skyblue', edgecolor='black')
     
-    plt.xlabel("Activity Type")
-    plt.ylabel("Total Minutes")
-    plt.title("Total Minutes Spent on Each Activity Type")
-    plt.xticks(rotation=45, ha='right')
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    types.plot(kind='bar', color='skyblue', edgecolor='black', ax=ax)
+    
+    ax.set_xlabel("Activity Type")
+    ax.set_ylabel("Total Minutes")
+    ax.set_title("Total Minutes Spent on Each Activity Type")
+    ax.set_xticklabels(types.index, rotation=45, ha='right')
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
     plt.tight_layout()
-    plt.show()
+    
+    st.pyplot(fig)
 
-    return most_common, types[most_common]
-
-# most_common_act(activity)
+print("HEREEEEEEEE",most_common_act(activity))
 #as one would expect, the most common activity is sedentary
+# Fetching all table names from the database
 
 # PART 3 ####################################################
 
 print('\n\n\nPART 3\n\n\n')
 
-conection = sqlite3.connect('fitbit_database.db')
+conection = sqlite3.connect('DENG/fitbit_database.db')
 cursor = conection.cursor()
 
 query = "SELECT Id, COUNT(Id) FROM daily_activity GROUP BY Id"
@@ -198,9 +199,9 @@ def classify_user(count):
         return "Heavy user"
 
 df_activity["Class"] = df_activity[df_activity.columns[1]].apply(classify_user)
-result_df = df_activity[["Id", "Class"]]
+classified_df = df_activity[["Id", "Class"]]
 
-print(result_df.head())
+print(classified_df.head())
 
 
 
@@ -400,7 +401,7 @@ def plot_weather_vs_activity(merged_df):
 # heart rate of this individual and the total intensity of the exercise taken
 
 def plot_heart_rate_intensity(id):
-    conection = sqlite3.connect('fitbit_database.db')
+    conection = sqlite3.connect('DENG/fitbit_database.db')
     
     query = f"SELECT * FROM heart_rate WHERE Id = {id}"
     heart_rate = pd.read_sql_query(query, conection)
@@ -457,3 +458,5 @@ weight_log['WeightKg']=weight_log['WeightKg'].fillna(weight_log['WeightPounds']/
 weight_log.drop('Fat',axis=1,inplace=True)
 
 #---------
+
+
