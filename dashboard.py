@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import datetime
 
+
 #i (lolo) gotta use this to run st
 #C:\Users\loloa\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\Scripts\streamlit.exe run DENG/dashboard.py
 # Connect to the database
@@ -47,9 +48,10 @@ filtered_df = df[df['Id'] == selected_id]
 
 if gen: #theres a bug here where a long deleted table still appears. if you rerun in streamlit it disappears.
 
-    st.write("Non id-specific data will appear here.")
+    st.subheader("Non id-specific data will appear here.")
     col1,col2=st.columns(2)
     with col1:
+        st.write("Average Time Spent in Different Activity Types")
         avg_lightly_active = df['LightlyActiveMinutes'].mean()
         avg_fairly_active = df['FairlyActiveMinutes'].mean()
         avg_very_active = df['VeryActiveMinutes'].mean()
@@ -61,12 +63,23 @@ if gen: #theres a bug here where a long deleted table still appears. if you reru
         ax1.set_ylabel('Average Minutes')
         ax1.set_title('Average Time Spent in Different Activity Types')
         st.pyplot(fig1)
-            
+
+        from fitbit import avarage_sleep
+        avg_sleep = avarage_sleep()
+        st.write("Average Sleep Data")
+        st.write(avg_sleep)
+
+        from fitbit import avg_number_of_steps
+        avg_steps = avg_number_of_steps()
+        st.write("Average Number of Steps")
+        st.write(avg_steps)
+
     with col2:
         from fitbit import classified_df
         # Assuming classified_df is a DataFrame with a column "class" containing user types
         user_counts = classified_df['Class'].value_counts()
 
+        st.write("Number of Users by Type")
         fig, ax = plt.subplots()
         user_counts = user_counts.reindex(['Light user', 'Moderate user', 'Heavy user'])
         
@@ -77,6 +90,19 @@ if gen: #theres a bug here where a long deleted table still appears. if you reru
         ax.set_title('Number of Users by Type')
 
         st.pyplot(fig)
+
+        from fitbit import average_calories_burnt
+        avg_calories = average_calories_burnt()
+        st.write("Average Calories Burnt")
+        st.write(avg_calories)
+
+        from fitbit import workout_frequency_by_day
+        workout_counts = workout_frequency_by_day(df)
+        st.write("Workout Frequency Data")
+        ### st.dataframe(workout_counts)
+        st.bar_chart(workout_counts)
+
+
 ######HERE in the if add the code for general statistics
 
 elif selected_id != 'Select Id' and not gen and not date_range_button:

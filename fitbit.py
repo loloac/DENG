@@ -157,6 +157,7 @@ def plot_light_activity_regression(activity):
 #no high burn of calories is recorded with a high number of lightly active minutes
 
 #shows time spent on each activity type
+'''
 def most_common_act(df):
     types = df[['VeryActiveMinutes', 'FairlyActiveMinutes', 'LightlyActiveMinutes', 'SedentaryMinutes']].sum()
     types.index = ['Very Active', 'Fairly Active', 'Lightly Active', 'Sedentary']
@@ -172,8 +173,8 @@ def most_common_act(df):
     plt.tight_layout()
     
     st.pyplot(fig)
-
-print("HEREEEEEEEE",most_common_act(activity))
+'''
+# print("HEREEEEEEEE",most_common_act(activity))
 #as one would expect, the most common activity is sedentary
 # Fetching all table names from the database
 
@@ -311,51 +312,72 @@ hourlySteps['TimeBlock'] = hourlySteps['ActivityHour'].dt.hour.apply(assignTimeB
 averageStepsBlock = hourlySteps.groupby('TimeBlock')['StepTotal'].mean()
 
 #Barplot for average number of steps
-plt.figure(figsize=(10, 6))
-averageStepsBlock = averageStepsBlock.reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
-averageStepsBlock.plot(kind='bar', color='skyblue', edgecolor='black')
-plt.xlabel('Time Block (Hours)')
-plt.ylabel('Average Steps')
-plt.title('Average Steps Taken in 4-Hour Blocks')
-plt.xticks(rotation=45)
-plt.grid(axis='y', linestyle='--', alpha=0.7)
-plt.tight_layout()
-plt.show()
+def avg_number_of_steps():
+    hourlySteps = pd.read_sql_query("SELECT * FROM hourly_steps", sqlite3.connect('DENG/fitbit_database.db'))
+    hourlySteps['ActivityHour'] = pd.to_datetime(hourlySteps['ActivityHour'])
+    hourlySteps['TimeBlock'] = hourlySteps['ActivityHour'].dt.hour.apply(assignTimeBlock)
+    averageStepsBlock = hourlySteps.groupby('TimeBlock')['StepTotal'].mean()
+    averageStepsBlock = averageStepsBlock.reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    averageStepsBlock.plot(kind='bar', color='skyblue', edgecolor='black', ax=ax)
+    ax.set_xlabel('Time Block (Hours)')
+    ax.set_ylabel('Average Steps')
+    ax.set_title('Average Steps Taken in 4-Hour Blocks')
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+
+    return fig
 
 #Barplot for average calories burnt
-hourlyCalories = pd.read_sql_query("SELECT * FROM hourly_calories", conection)
-hourlyCalories['ActivityHour'] = pd.to_datetime(hourlyCalories['ActivityHour'], format='%m/%d/%Y %I:%M:%S %p')
-hourlyCalories['TimeBlock'] = hourlyCalories['ActivityHour'].dt.hour.apply(assignTimeBlock)
-timeblock_avg_calories = hourlyCalories.groupby('TimeBlock')['Calories'].mean().reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
-plt.figure(figsize=(10, 6))
-timeblock_avg_calories.plot(kind='bar', color='lightcoral', edgecolor='black')
-plt.xlabel('Time Block (Hours)')
-plt.ylabel('Average Calories Burned')
-plt.title('Average Calories Burned per 4-Hour Block')
-plt.xticks(rotation=45)
-plt.grid(axis='y', linestyle='--', alpha=0.7)
-plt.tight_layout()
-plt.show()
+def average_calories_burnt():
+    conection = sqlite3.connect('DENG/fitbit_database.db')
+    
+    hourlyCalories = pd.read_sql_query("SELECT * FROM hourly_calories", conection)
+    
+    conection.close()
+    
+    hourlyCalories['ActivityHour'] = pd.to_datetime(hourlyCalories['ActivityHour'], format='%m/%d/%Y %I:%M:%S %p')
+    hourlyCalories['TimeBlock'] = hourlyCalories['ActivityHour'].dt.hour.apply(assignTimeBlock)
+    timeblock_avg_calories = hourlyCalories.groupby('TimeBlock')['Calories'].mean().reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    timeblock_avg_calories.plot(kind='bar', color='lightcoral', edgecolor='black', ax=ax)
+    ax.set_xlabel('Time Block (Hours)')
+    ax.set_ylabel('Average Calories Burned')
+    ax.set_title('Average Calories Burned per 4-Hour Block')
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    
+    return fig
 #According to the dataset, it makes sense how the average calories are burnt throughout the 6 blocks of 
 #4 hours, it also makes sense that calories are burnt at times where the user might be sleeping,
 #this is because you also burn calories when you sleep.
 
 #Barplot for average sleep
-df_sleep = pd.read_sql_query("SELECT * FROM minute_sleep", conection)
-# Convert the date column to full day
-df_sleep['date'] = pd.to_datetime(df_sleep['date'], format='%m/%d/%Y %I:%M:%S %p')
-df_sleep['TimeBlock'] = df_sleep['date'].dt.hour.apply(assignTimeBlock)
-timeblock_total_sleep = df_sleep.groupby('TimeBlock')['value'].sum().reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
-plt.figure(figsize=(10, 6))
-timeblock_total_sleep.plot(kind='bar', color='mediumseagreen', edgecolor='black')
-plt.xlabel('Time Block (Hours)')
-plt.ylabel('Total Sleep Minutes')
-plt.title('Total Sleep Minutes per 4-Hour Block')
-plt.xticks(rotation=45)
-plt.grid(axis='y', linestyle='--', alpha=0.7)
-plt.tight_layout()
-plt.show()
-
+def avarage_sleep():
+    conection = sqlite3.connect('DENG/fitbit_database.db')
+    df_sleep = pd.read_sql_query("SELECT * FROM minute_sleep", conection)
+    
+    conection.close()
+    
+    df_sleep['date'] = pd.to_datetime(df_sleep['date'], format='%m/%d/%Y %I:%M:%S %p')
+    df_sleep['TimeBlock'] = df_sleep['date'].dt.hour.apply(assignTimeBlock)
+    
+    timeblock_total_sleep = df_sleep.groupby('TimeBlock')['value'].sum().reindex(['0-4', '4-8', '8-12', '12-16', '16-20', '20-24'])
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    timeblock_total_sleep.plot(kind='bar', color='mediumseagreen', edgecolor='black', ax=ax)
+    ax.set_xlabel('Time Block (Hours)')
+    ax.set_ylabel('Total Sleep Minutes')
+    ax.set_title('Total Sleep Minutes per 4-Hour Block')
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    
+    return fig
 #weather relationship to activity
 weather=pd.read_csv("chicago.csv")
 weather=weather[["datetime","temp","precip"]]
@@ -393,7 +415,7 @@ def plot_weather_vs_activity(merged_df):
     plt.tight_layout()
     plt.show()
 
-#plot_weather_vs_activity(merged_df)
+plot_weather_vs_activity(merged_df)
 
 #prof said we should do an interaction plot as well... unfinished business
 
