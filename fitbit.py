@@ -9,7 +9,7 @@ import seaborn as sns
 import sqlite3
 import scipy.stats as stats
 import streamlit as st
-file = 'daily_acivity.csv' # DENG/
+file = 'DENG/daily_acivity.csv' # DENG/
 
 def read_csv_file(file):
     df = pd.read_csv(file)
@@ -29,16 +29,16 @@ def total_distance_per_user(df):
     print(total_distance)
     print('\n')
 
-    plt.figure(figsize=(12, 6))
-    total_distance.plot(kind='bar', color='skyblue', edgecolor='black')
-    plt.xlabel("User ID")
-    plt.ylabel("Total Distance")
-    plt.title("Total Distance Tracked per User")
-    plt.xticks(rotation=45)
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    fig, ax = plt.subplots(figsize=(12, 7))
+    total_distance.plot(kind='bar', color='skyblue', edgecolor='black', ax=ax)
+    ax.set_xlabel("User ID")
+    ax.set_ylabel("Total Distance")
+    ax.set_title("Total Distance Tracked per User")
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
 
-    return total_distance
+    return fig
 
 # B) To make it more user-specific, implement a function that takes as input a user
 # Id and displays a line graph that shows the calories burnt on each day.
@@ -70,7 +70,8 @@ def calories_per_day(df, id, start_date, end_date):
     plt.show()
 
     return calories_per_day
-
+df = read_csv_file(file)
+calories_per_day(df, 1503960366, start_date="2016-03-25", end_date="2016-04-8")
 # Use datetime or manually look op the day of the week for each date and make a barplot
 # with the day on the x-axis and the frequency at which all individuals work out on the
 # respective day on the y-axis.
@@ -107,7 +108,7 @@ df = read_csv_file(file)
 
 
 
-activity=pd.read_csv("daily_acivity.csv")  # DENG/
+activity=pd.read_csv("DENG/daily_acivity.csv")  # DENG/
 activity.head()
 
 activity["Id"]=activity["Id"].astype("category")
@@ -379,7 +380,7 @@ def avarage_sleep():
     
     return fig
 #weather relationship to activity
-weather=pd.read_csv("chicago.csv")
+weather=pd.read_csv("DENG/chicago.csv")
 weather=weather[["datetime","temp","precip"]]
 
 activitee = sleep_and_minutes[["Id", "Date", "TotalActiveMinutes"]]
@@ -488,7 +489,7 @@ print(correlations)
 
 #Plotting the correlation between sedentary minutes and minutes of sleep
 def plot_sedentary_sleep_correlation(id):
-    connection = sqlite3.connect('fitbit_database.db')
+    connection = sqlite3.connect('DENG/fitbit_database.db')
 
     query = f"SELECT * FROM minute_sleep WHERE Id = {id}"
     minute_sleep = pd.read_sql_query(query, connection)
@@ -500,6 +501,9 @@ def plot_sedentary_sleep_correlation(id):
     
     sleep_by_date = minute_sleep.groupby('Date').size().reset_index(name='SleepMinutes')
     merged_df = pd.merge(sleep_by_date, daily_activity, on='Date', how='inner')
+
+    if merged_df.empty:
+        return f"Unfortunately, there is no overlapping data for user {id}."
     
     fig, ax1 = plt.subplots(figsize=(14, 8))
     
@@ -525,11 +529,13 @@ def plot_sedentary_sleep_correlation(id):
     
     plt.title(f"Sedentary vs Sleep Minutes for ID: {id}")
     plt.tight_layout()
-    plt.show()
+
+    return fig
+
 plot_sedentary_sleep_correlation(1503960366)
 
 def plot_very_active_sleep_correlation(id):
-    connection = sqlite3.connect('fitbit_database.db')
+    connection = sqlite3.connect('DENG/fitbit_database.db')
 
     query = f"SELECT * FROM minute_sleep WHERE Id = {id}"
     minute_sleep = pd.read_sql_query(query, connection)
@@ -541,6 +547,9 @@ def plot_very_active_sleep_correlation(id):
     
     sleep_by_date = minute_sleep.groupby('Date').size().reset_index(name='SleepMinutes')
     merged_df = pd.merge(sleep_by_date, daily_activity, on='Date', how='inner')
+
+    if merged_df.empty:
+        return f"Unfortunately, there is no overlapping data for user {id}."
 
     fig, ax1 = plt.subplots(figsize=(14, 8))
     
@@ -567,10 +576,13 @@ def plot_very_active_sleep_correlation(id):
     plt.title(f"Active Minutes vs Sleep Minutes for ID: {id}")
     plt.tight_layout()
     plt.show()
+
+    return fig
+
 plot_very_active_sleep_correlation(1503960366)
 
 def plot_intensity_sleep_correlation(id):
-    connection = sqlite3.connect('fitbit_database.db')
+    connection = sqlite3.connect('DENG/fitbit_database.db')
     
     query = f"SELECT * FROM hourly_intensity WHERE Id = {id}"
     hourly_intensity = pd.read_sql_query(query, connection)
@@ -584,6 +596,10 @@ def plot_intensity_sleep_correlation(id):
     intensity_by_date = hourly_intensity.groupby('Date')['AverageIntensity'].mean().reset_index()
 
     merged_df = pd.merge(sleep_by_date, intensity_by_date, on='Date', how='inner')
+
+    if merged_df.empty:
+        return f"Unfortunately, there is no overlapping data for user {id}."
+
     merged_df['DateStr'] = merged_df['Date'].astype(str)
     
     fig, ax1 = plt.subplots(figsize=(14, 8))
@@ -611,6 +627,8 @@ def plot_intensity_sleep_correlation(id):
     plt.title(f"Average Intensity vs Sleep Minutes for ID: {id}")
     plt.tight_layout()
     plt.show()
+
+    return fig
     #
 plot_intensity_sleep_correlation(1503960366)
 #---------

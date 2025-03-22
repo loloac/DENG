@@ -74,6 +74,11 @@ if gen: #theres a bug here where a long deleted table still appears. if you reru
         st.write("Average Number of Steps")
         st.write(avg_steps)
 
+        from fitbit import workout_frequency_by_day
+        workout_counts = workout_frequency_by_day(df)
+        st.write("Workout Frequency Data")
+        st.bar_chart(workout_counts)
+
     with col2:
         from fitbit import classified_df
         # Assuming classified_df is a DataFrame with a column "class" containing user types
@@ -96,11 +101,18 @@ if gen: #theres a bug here where a long deleted table still appears. if you reru
         st.write("Average Calories Burnt")
         st.write(avg_calories)
 
+        df = 'DENG/daily_acivity.csv'
+        from fitbit import read_csv_file
+        df = read_csv_file(df)
+        from fitbit import total_distance_per_user
+        total_distance = total_distance_per_user(df)
+        st.write("Total Distance Covered by Each User")
+        st.write(total_distance)
+
         from fitbit import workout_frequency_by_day
         workout_counts = workout_frequency_by_day(df)
-        st.write("Workout Frequency Data")
-        ### st.dataframe(workout_counts)
-        st.bar_chart(workout_counts)
+        st.write("                                                                            ")
+        st.dataframe(workout_counts)
 
 
 ######HERE in the if add the code for general statistics
@@ -138,6 +150,36 @@ elif selected_id != 'Select Id' and not gen and not date_range_button:
 
     # Sleep related data
     st.subheader("Sleep Related Data")
+
+    from fitbit import plot_sedentary_sleep_correlation
+    plot_sleep, ax = plt.subplots()
+    plot_sleep = plot_sedentary_sleep_correlation(selected_id)
+    st.write("Sedentary Minutes vs Sleep")
+    # Check if the function returned a string (no overlapping data)
+    if isinstance(plot_sleep, str):
+        st.warning(plot_sleep)
+    else:
+        st.pyplot(plot_sleep)
+
+    from fitbit import plot_very_active_sleep_correlation
+    plot_sleep, ax = plt.subplots()
+    plot_sleep = plot_very_active_sleep_correlation(selected_id)
+    st.write("Very Active Minutes vs Sleep")
+    # Check if the function returned a string (no overlapping data)
+    if isinstance(plot_sleep, str):
+        st.warning(plot_sleep)
+    else:
+        st.pyplot(plot_sleep)
+
+    from fitbit import plot_intensity_sleep_correlation
+    plot_sleep, ax = plt.subplots()
+    plot_sleep = plot_intensity_sleep_correlation(selected_id)
+    st.write("Intensity vs Sleep")
+    # Check if the function returned a string (no overlapping data)
+    if isinstance(plot_sleep, str):
+        st.warning(plot_sleep)
+    else:
+        st.pyplot(plot_sleep)
 
 ######HERE in the if add the code for ID specific data, using filtered_df
 elif date_range_button:
