@@ -29,9 +29,25 @@ The dashboard visualizes data through various graphs, providing insights into th
 
 
 ### How to run
-...
-### How it's made
-Tech used: Python for the back-end and Streamlit for the Dashboard
 
-...
+To run it localy, you will first need to install a few libraries. Try `install {library}` or `pip install {library}` on Windows and download the following libraries:
 
+• **pandas** 
+
+• **numpy**
+
+• **matplotlib.pyplot** 
+
+• **datetime**
+
+• **statsmodels.formula.api** 
+
+• **seaborn**
+
+• **sqlite3**
+
+• **scipy.stats**
+
+• **streamlit**
+
+To run the dashboard run on the terminal `streamlit run {dashboard file}`
