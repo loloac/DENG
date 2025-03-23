@@ -1,0 +1,10 @@
+
+pandas
+numpy
+matplotlib.pyplot
+datetime
+statsmodels.formula.api
+seaborn
+sqlite3
+scipy.stats
+streamlit
