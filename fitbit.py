@@ -9,7 +9,7 @@ import seaborn as sns
 import sqlite3
 import scipy.stats as stats
 import streamlit as st
-file = 'DENG/daily_acivity.csv' # DENG/
+file = 'daily_acivity.csv' # 
 
 def read_csv_file(file):
     df = pd.read_csv(file)
@@ -108,7 +108,7 @@ df = read_csv_file(file)
 
 
 
-activity=pd.read_csv("DENG/daily_acivity.csv")  # DENG/
+activity=pd.read_csv("daily_acivity.csv")  # 
 activity.head()
 
 activity["Id"]=activity["Id"].astype("category")
@@ -183,7 +183,7 @@ def most_common_act(df):
 
 print('\n\n\nPART 3\n\n\n')
 
-conection = sqlite3.connect('DENG/fitbit_database.db')
+conection = sqlite3.connect('fitbit_database.db')
 cursor = conection.cursor()
 
 query = "SELECT Id, COUNT(Id) FROM daily_activity GROUP BY Id"
@@ -314,7 +314,7 @@ averageStepsBlock = hourlySteps.groupby('TimeBlock')['StepTotal'].mean()
 
 #Barplot for average number of steps
 def avg_number_of_steps():
-    hourlySteps = pd.read_sql_query("SELECT * FROM hourly_steps", sqlite3.connect('DENG/fitbit_database.db'))
+    hourlySteps = pd.read_sql_query("SELECT * FROM hourly_steps", sqlite3.connect('fitbit_database.db'))
     hourlySteps['ActivityHour'] = pd.to_datetime(hourlySteps['ActivityHour'])
     hourlySteps['TimeBlock'] = hourlySteps['ActivityHour'].dt.hour.apply(assignTimeBlock)
     averageStepsBlock = hourlySteps.groupby('TimeBlock')['StepTotal'].mean()
@@ -333,7 +333,7 @@ def avg_number_of_steps():
 
 #Barplot for average calories burnt
 def average_calories_burnt():
-    conection = sqlite3.connect('DENG/fitbit_database.db')
+    conection = sqlite3.connect('fitbit_database.db')
     
     hourlyCalories = pd.read_sql_query("SELECT * FROM hourly_calories", conection)
     
@@ -359,7 +359,7 @@ def average_calories_burnt():
 
 #Barplot for average sleep
 def avarage_sleep():
-    conection = sqlite3.connect('DENG/fitbit_database.db')
+    conection = sqlite3.connect('fitbit_database.db')
     df_sleep = pd.read_sql_query("SELECT * FROM minute_sleep", conection)
     
     conection.close()
@@ -381,7 +381,7 @@ def avarage_sleep():
     return fig
 
 #weather relationship to activity
-weather=pd.read_csv("DENG/chicago.csv")
+weather=pd.read_csv("chicago.csv")
 weather=weather[["datetime","temp","precip"]]
 
 activitee = sleep_and_minutes[["Id", "Date", "TotalActiveMinutes","VeryActiveMinutes","FairlyActiveMinutes","LightlyActiveMinutes"]]
@@ -445,7 +445,7 @@ def rain_vs_activity(mergedstuff):
 # heart rate of this individual and the total intensity of the exercise taken
 
 def plot_heart_rate_intensity(id):
-    conection = sqlite3.connect('DENG/fitbit_database.db')
+    conection = sqlite3.connect('fitbit_database.db')
     
     query = f"SELECT * FROM heart_rate WHERE Id = {id}"
     heart_rate = pd.read_sql_query(query, conection)
@@ -510,7 +510,7 @@ print(correlations)
 
 #Plotting the correlation between sedentary minutes and minutes of sleep
 def plot_sedentary_sleep_correlation(id):
-    connection = sqlite3.connect('DENG/fitbit_database.db')
+    connection = sqlite3.connect('fitbit_database.db')
 
     query = f"SELECT * FROM minute_sleep WHERE Id = {id}"
     minute_sleep = pd.read_sql_query(query, connection)
@@ -556,7 +556,7 @@ def plot_sedentary_sleep_correlation(id):
 plot_sedentary_sleep_correlation(1503960366)
 
 def plot_very_active_sleep_correlation(id):
-    connection = sqlite3.connect('DENG/fitbit_database.db')
+    connection = sqlite3.connect('fitbit_database.db')
 
     query = f"SELECT * FROM minute_sleep WHERE Id = {id}"
     minute_sleep = pd.read_sql_query(query, connection)
@@ -603,7 +603,7 @@ def plot_very_active_sleep_correlation(id):
 plot_very_active_sleep_correlation(1503960366)
 
 def plot_intensity_sleep_correlation(id):
-    connection = sqlite3.connect('DENG/fitbit_database.db')
+    connection = sqlite3.connect('fitbit_database.db')
     
     query = f"SELECT * FROM hourly_intensity WHERE Id = {id}"
     hourly_intensity = pd.read_sql_query(query, connection)
