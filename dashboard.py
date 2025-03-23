@@ -108,7 +108,7 @@ if gen:
         workout_counts = workout_frequency_by_day(df)
         st.write("                                                                            ")
         st.dataframe(workout_counts)
-    st.write("weather related data")
+    st.write("weather related data (excluding lightly active minutes)")
     from fitbit import mergedstuff, temp_vs_activity, rain_vs_activity
     col1, col2 = st.columns(2)
     with col1:
