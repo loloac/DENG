@@ -7,13 +7,12 @@ import datetime
 
 
 #i (lolo) gotta use this to run st
-#C:\Users\loloa\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\Scripts\streamlit.exe run DENG/dashboard.py
 # Connect to the database
 
 #only imported daily_activity from the database. if you import more tables make sure to add so they are filtered by date or id in the below code
 #i indicated below where it is that you can add the charts and stats for each part of the dashboard
 
-conn = sqlite3.connect('DENG/fitbit_database.db')
+conn = sqlite3.connect('fitbit_database.db')
 cursor = conn.cursor()
 
 
@@ -109,7 +108,7 @@ if gen:
         st.write("Average Calories Burnt")
         st.write(avg_calories)
 
-        df = 'DENG/daily_acivity.csv'
+        df = 'daily_acivity.csv'
         from fitbit import read_csv_file
         df = read_csv_file(df)
         from fitbit import total_distance_per_user
