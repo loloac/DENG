@@ -31,12 +31,16 @@ sleep_by_date = sleep.groupby('date').size().reset_index(name='SleepMinutes')
 st.title("Fitbit Dashboard")
 
 df['TotalActiveMinutes'] = df['LightlyActiveMinutes'] + df['VeryActiveMinutes'] + df['FairlyActiveMinutes']
-gen=st.sidebar.button("General Stats")
+
+if "selected_id" not in st.session_state:  
+    st.session_state.selected_id = "Select Id"
+
+gen = st.sidebar.button("General Statistics", on_click=lambda: st.session_state.update(selected_id="Select Id"))
 
 unique_ids = df['Id'].unique()
 unique_ids = unique_ids.astype(object)
 unique_ids = np.insert(unique_ids, 0, "Select Id")
-selected_id = st.sidebar.selectbox('See data by Id', unique_ids)
+selected_id = st.sidebar.selectbox('See data by Id', unique_ids, index=0, key="selected_id")
 df["ActivityDate"]=pd.to_datetime(df['ActivityDate'])
 times=df["ActivityDate"].unique()
 times=times.tolist()
@@ -57,7 +61,7 @@ filtered_df = df[df['Id'] == selected_id]
 
 if gen: 
 
-    st.subheader("Non id-specific data will appear here.")
+    st.subheader("General Statistics from 33 Users")
     col1,col2=st.columns(2)
     with col1:
         st.write("Average Time Spent in Different Activity Types")
@@ -126,7 +130,6 @@ if gen:
     with col2:
         st.write("Rain vs Activity")    
         st.pyplot(rain_vs_activity(mergedstuff))
-    st.write("there seems to be hardly any effect of weather on activity")
 
 ######HERE in the if add the code for general statistics
 #sleep, heart rate intensity, and minute_sleep, calories
@@ -138,7 +141,7 @@ elif selected_id != 'Select Id' and not gen and not date_range_button:
     fig, ax = plt.subplots()
     for date, group in filtered_df.groupby('ActivityDate'):
         ax.scatter(group['TotalActiveMinutes'], group['Calories'], label=date)
-    # Add a trend line
+
     if not filtered_df.empty:
         z = np.polyfit(filtered_df['TotalActiveMinutes'], filtered_df['Calories'], 1)
         p = np.poly1d(z)
@@ -157,9 +160,9 @@ elif selected_id != 'Select Id' and not gen and not date_range_button:
     st.write("Avarage Heart Rate and Total Intensity")
     # Check if the function returned a string (no overlapping data)
     if isinstance(plot_heart_rate, str):
-        st.warning(plot_heart_rate)  # Display the message as a warning
+        st.warning(plot_heart_rate) 
     else:
-        st.pyplot(plot_heart_rate)  # Display the plot if data exists
+        st.pyplot(plot_heart_rate)
 
     # Sleep related data
     st.subheader("Sleep Related Data")
@@ -168,7 +171,6 @@ elif selected_id != 'Select Id' and not gen and not date_range_button:
     plot_sleep, ax = plt.subplots()
     plot_sleep = plot_sedentary_sleep_correlation(selected_id)
     st.write("Sedentary Minutes vs Sleep")
-    # Check if the function returned a string (no overlapping data)
     if isinstance(plot_sleep, str):
         st.warning(plot_sleep)
     else:
@@ -178,7 +180,6 @@ elif selected_id != 'Select Id' and not gen and not date_range_button:
     plot_sleep, ax = plt.subplots()
     plot_sleep = plot_very_active_sleep_correlation(selected_id)
     st.write("Very Active Minutes vs Sleep")
-    # Check if the function returned a string (no overlapping data)
     if isinstance(plot_sleep, str):
         st.warning(plot_sleep)
     else:
@@ -188,7 +189,6 @@ elif selected_id != 'Select Id' and not gen and not date_range_button:
     plot_sleep, ax = plt.subplots()
     plot_sleep = plot_intensity_sleep_correlation(selected_id)
     st.write("Intensity vs Sleep")
-    # Check if the function returned a string (no overlapping data)
     if isinstance(plot_sleep, str):
         st.warning(plot_sleep)
     else:
@@ -208,18 +208,7 @@ elif date_range_button and selected_id == 'Select Id' and not gen:
 
 
 ######HERE in the if add the code for data to be filtered by dates
-# sleep_by_date["date"] = pd.to_datetime(sleep_by_date["date"])
-# st.write("Sleep Data by Date")
-# sleep_data = sleep_by_date[(sleep_by_date["date"] >= start_date) & (sleep_by_date["date"] < end_date)]
-# fig, ax = plt.subplots()
-# ax.bar(sleep_data['date'], sleep_data['SleepMinutes'], color='purple')
-# ax.set_xlabel('Date')
-# ax.set_ylabel('Total Minutes Asleep')
-# ax.set_title('Total Minutes Asleep by Date')
-# plt.xticks(rotation=45)
-# st.pyplot(fig)
-# st.subheader("Average Calories Burnt per Day")
-    st.pyplot(fig)
+
     st.subheader("Average Calories Burnt per Day")
     avg_calories = time_df.groupby(time_df['ActivityDate'].dt.date)['Calories'].mean()
     fig, ax = plt.subplots()
@@ -248,5 +237,6 @@ elif date_range_button and selected_id == 'Select Id' and not gen:
         ax.grid(axis='y', linestyle='--', alpha=0.7)
         
         return fig
+    st.subheader("Average Calories by Date")
     fig = workout_frequency_by_day(time_df)
     st.pyplot(fig)

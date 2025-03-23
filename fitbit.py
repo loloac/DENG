@@ -410,7 +410,6 @@ def temp_vs_activity(mergedstuff):
     # Calculate the average minutes for each activity type per temperature feel
     activity_avg_by_temp = mergedstuff.groupby('temp_feel')[['VeryActiveMinutes', 'FairlyActiveMinutes']].mean()
 
-    # Plotting the stacked bar plot
     fig, ax = plt.subplots(figsize=(10, 6))
     activity_avg_by_temp.plot(kind='bar', stacked=True, color=['red', 'orange'], edgecolor='black', ax=ax)
     ax.set_xlabel('Temperature Feel')
@@ -427,7 +426,6 @@ def rain_vs_activity(mergedstuff):
     # Calculate the average minutes for each activity type per precipitation feel
     activity_avg_by_rain = mergedstuff.groupby('precip_feel')[['VeryActiveMinutes', 'FairlyActiveMinutes']].mean()
 
-    # Plotting the stacked bar plot
     fig, ax = plt.subplots(figsize=(10, 6))
     activity_avg_by_rain.plot(kind='bar', stacked=True, color=['blue', 'cyan'], edgecolor='black', ax=ax)
 
