@@ -49,7 +49,7 @@ min_date = pd.to_datetime(times[0]).to_pydatetime()
 max_date = pd.to_datetime(times[-1]).to_pydatetime()
 start_date, end_date = st.sidebar.slider("Select Date Range", min_value=min_date, max_value=max_date, value=(min_date, max_date), format="YYYY-MM-DD")
 time_df = df[(df['ActivityDate'] >= start_date) & (df['ActivityDate'] < end_date + pd.Timedelta(days=1))]
-date_range_button = st.sidebar.button("Click to see data filtered by the chosen date range")
+date_range_button = st.sidebar.button("Click to see data filtered by the chosen date range", on_click=lambda: st.session_state.update(selected_id="Select Id"))
 
 
 
