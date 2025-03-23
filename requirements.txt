@@ -6,5 +6,5 @@ datetime
 statsmodels
 seaborn
 sqlite3
-scipy.stats
+scipy
 streamlit
