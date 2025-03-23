@@ -5,6 +5,5 @@ matplotlib
 datetime
 statsmodels
 seaborn
-sqlite3
 scipy
 streamlit
