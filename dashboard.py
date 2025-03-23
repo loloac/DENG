@@ -46,7 +46,7 @@ date_range_button = st.sidebar.button("Click to see data filtered by the chosen 
 # Filtering data based on selected Id
 filtered_df = df[df['Id'] == selected_id]
 
-if gen: #theres a bug here where a long deleted table still appears. if you rerun in streamlit it disappears.
+if gen: 
 
     st.subheader("Non id-specific data will appear here.")
     col1,col2=st.columns(2)
@@ -81,20 +81,15 @@ if gen: #theres a bug here where a long deleted table still appears. if you reru
 
     with col2:
         from fitbit import classified_df
-        # Assuming classified_df is a DataFrame with a column "class" containing user types
+    
         user_counts = classified_df['Class'].value_counts()
 
         st.write("Number of Users by Type")
         fig, ax = plt.subplots()
-        user_counts = user_counts.reindex(['Light user', 'Moderate user', 'Heavy user'])
-        
-        ax.bar(user_counts.index, user_counts.values, color=['red', 'yellow', 'blue'])
-        
-        ax.set_xlabel('User Type')
-        ax.set_ylabel('Count')
-        ax.set_title('Number of Users by Type')
-
+        ax.pie(user_counts, labels=user_counts.index, autopct='%1.1f%%', colors=['brown', 'beige', 'blue'], startangle=90)
+        ax.set_title("User Distribution by type")
         st.pyplot(fig)
+
 
         from fitbit import average_calories_burnt
         avg_calories = average_calories_burnt()
@@ -113,10 +108,19 @@ if gen: #theres a bug here where a long deleted table still appears. if you reru
         workout_counts = workout_frequency_by_day(df)
         st.write("                                                                            ")
         st.dataframe(workout_counts)
-
+    st.write("weather related data (excluding lightly active minutes)")
+    from fitbit import mergedstuff, temp_vs_activity, rain_vs_activity
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write("Temperature vs Activity")
+        st.pyplot(temp_vs_activity(mergedstuff))
+    with col2:
+        st.write("Rain vs Activity")    
+        st.pyplot(rain_vs_activity(mergedstuff))
+    st.write("there seems to be hardly any effect of weather on activity")
 
 ######HERE in the if add the code for general statistics
-
+#sleep, heart rate intensity, and minute_sleep, calories
 elif selected_id != 'Select Id' and not gen and not date_range_button:
     st.header(f"Showing the Data from ID {selected_id}")
 
@@ -181,8 +185,12 @@ elif selected_id != 'Select Id' and not gen and not date_range_button:
     else:
         st.pyplot(plot_sleep)
 
+
+
+
 ######HERE in the if add the code for ID specific data, using filtered_df
 elif date_range_button:
     selected_id="Select Id"
     st.write(f"Data from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+    #ti
 ######HERE in the if add the code for data to be filtered by dates, using time_df
