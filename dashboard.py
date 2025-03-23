@@ -197,7 +197,7 @@ elif selected_id != 'Select Id' and not gen and not date_range_button:
 
 
 ######HERE in the if add the code for ID specific data, using filtered_df
-elif date_range_button and selected_id == 'Select Id' and not gen:
+elif date_range_button:
     selected_id = "Select Id"
     st.write(f"Data from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
 
