@@ -379,44 +379,67 @@ def avarage_sleep():
     plt.tight_layout()
     
     return fig
+
 #weather relationship to activity
 weather=pd.read_csv("DENG/chicago.csv")
 weather=weather[["datetime","temp","precip"]]
 
-activitee = sleep_and_minutes[["Id", "Date", "TotalActiveMinutes"]]
+activitee = sleep_and_minutes[["Id", "Date", "TotalActiveMinutes","VeryActiveMinutes","FairlyActiveMinutes","LightlyActiveMinutes"]]
 
 #ensuring the date formats match
 weather['datetime'] = pd.to_datetime(weather['datetime'], format='%Y-%m-%d')
 activitee['Date'] = pd.to_datetime(activitee['Date'], format='%Y-%m-%d')
 
-#merging the weather and activity dataframes on the date
-merged_df = pd.merge(activitee, weather, left_on='Date', right_on='datetime')
-print(merged_df.head())
-def plot_weather_vs_activity(merged_df):
-    plt.figure(figsize=(14, 6))
 
-    # Precipitation vs Active Minutes
-    plt.subplot(1, 2, 1)
-    sns.scatterplot(x=merged_df['precip'], y=merged_df['TotalActiveMinutes'], label="data")
-    sns.lineplot(x=merged_df['precip'], y=smf.ols(formula="TotalActiveMinutes ~ precip", data=merged_df).fit().predict(merged_df['precip']), color='red')
-    plt.xlabel("Precipitation")
-    plt.ylabel("Total Active Minutes")
-    plt.title("Total Active Minutes vs Precipitation")
-    plt.legend()
+mergedstuff = pd.merge(activitee, weather, left_on='Date', right_on='datetime')
+# Define quintiles and corresponding labels
+quintiles = pd.qcut(mergedstuff['temp'], 5, labels=["Very Cold", "Cold", "Mildly cold", "Mild", "Mildly warm"])
 
-    # Temperature vs Active Minutes
-    plt.subplot(1, 2, 2)
-    sns.scatterplot(x=merged_df['temp'], y=merged_df['TotalActiveMinutes'], label="data")
-    sns.lineplot(x=merged_df['temp'], y=smf.ols(formula="TotalActiveMinutes ~ temp", data=merged_df).fit().predict(merged_df['temp']), color='red')
-    plt.xlabel("Temperature")
-    plt.ylabel("Total Active Minutes")
-    plt.title("Total Active Minutes vs Temperature")
-    plt.legend()
+# Add the quintile labels to the dataframe
+mergedstuff['temp_feel'] = quintiles
 
+quartiles = pd.qcut(
+    mergedstuff['precip'], 
+    4, 
+    labels=["Very Dry", "Dry", "Mildly Wet", "Wet"], 
+    duplicates="drop"
+)
+mergedstuff['precip_feel'] = quartiles
+
+def temp_vs_activity(mergedstuff):
+    # Calculate the average minutes for each activity type per temperature feel
+    activity_avg_by_temp = mergedstuff.groupby('temp_feel')[['VeryActiveMinutes', 'FairlyActiveMinutes', 'LightlyActiveMinutes']].mean()
+
+    # Plotting the stacked bar plot
+    fig, ax = plt.subplots(figsize=(10, 6))
+    activity_avg_by_temp.plot(kind='bar', stacked=True, color=['red', 'orange', 'yellow'], edgecolor='black', ax=ax)
+    ax.set_xlabel('Temperature Feel')
+    ax.set_ylabel('Average Minutes')
+    ax.set_title('Average Activity Minutes by Temperature Feel')
+    ax.set_xticklabels(activity_avg_by_temp.index, rotation=45)
+    ax.legend(title='Activity Type')
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
     plt.tight_layout()
-    plt.show()
+    
+    return fig
 
-plot_weather_vs_activity(merged_df)
+def rain_vs_activity(mergedstuff):
+    # Calculate the average minutes for each activity type per precipitation feel
+    activity_avg_by_rain = mergedstuff.groupby('precip_feel')[['VeryActiveMinutes', 'FairlyActiveMinutes', 'LightlyActiveMinutes']].mean()
+
+    # Plotting the stacked bar plot
+    fig, ax = plt.subplots(figsize=(10, 6))
+    activity_avg_by_rain.plot(kind='bar', stacked=True, color=['blue', 'cyan', 'lightblue'], edgecolor='black', ax=ax)
+
+    ax.set_xlabel('Precipitation Feel')
+    ax.set_ylabel('Average Minutes')
+    ax.set_title('Average Activity Minutes by Precipitation Feel')
+    ax.set_xticklabels(activity_avg_by_rain.index, rotation=45)
+    ax.legend(title='Activity Type')
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+
+    return fig
 
 #prof said we should do an interaction plot as well... unfinished business
 
