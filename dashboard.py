@@ -19,9 +19,14 @@ cursor = conn.cursor()
 
 query = "SELECT * FROM daily_activity"
 df = pd.read_sql_query(query, conn)
+query = "SELECT * FROM minute_sleep"
+sleep = pd.read_sql_query(query, conn)
+quert="SELECT * FROM hourly_intensity"
+hourly_intensity = pd.read_sql_query(query, conn)
+
 
 conn.close()
-
+sleep_by_date = sleep.groupby('date').size().reset_index(name='SleepMinutes')
 
 st.title("Fitbit Dashboard")
 
@@ -42,6 +47,10 @@ max_date = pd.to_datetime(times[-1]).to_pydatetime()
 start_date, end_date = st.sidebar.slider("Select Date Range", min_value=min_date, max_value=max_date, value=(min_date, max_date), format="YYYY-MM-DD")
 time_df = df[(df['ActivityDate'] >= start_date) & (df['ActivityDate'] < end_date + pd.Timedelta(days=1))]
 date_range_button = st.sidebar.button("Click to see data filtered by the chosen date range")
+
+
+
+
 
 # Filtering data based on selected Id
 filtered_df = df[df['Id'] == selected_id]
@@ -189,8 +198,55 @@ elif selected_id != 'Select Id' and not gen and not date_range_button:
 
 
 ######HERE in the if add the code for ID specific data, using filtered_df
-elif date_range_button:
-    selected_id="Select Id"
+elif date_range_button and selected_id == 'Select Id' and not gen:
+    selected_id = "Select Id"
     st.write(f"Data from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
-    #ti
-######HERE in the if add the code for data to be filtered by dates, using time_df
+
+    st.subheader("Average Steps per Day")
+    daily_steps = time_df.groupby(time_df['ActivityDate'].dt.date)['TotalSteps'].mean()
+    st.line_chart(daily_steps)
+
+
+######HERE in the if add the code for data to be filtered by dates
+# sleep_by_date["date"] = pd.to_datetime(sleep_by_date["date"])
+# st.write("Sleep Data by Date")
+# sleep_data = sleep_by_date[(sleep_by_date["date"] >= start_date) & (sleep_by_date["date"] < end_date)]
+# fig, ax = plt.subplots()
+# ax.bar(sleep_data['date'], sleep_data['SleepMinutes'], color='purple')
+# ax.set_xlabel('Date')
+# ax.set_ylabel('Total Minutes Asleep')
+# ax.set_title('Total Minutes Asleep by Date')
+# plt.xticks(rotation=45)
+# st.pyplot(fig)
+# st.subheader("Average Calories Burnt per Day")
+    st.pyplot(fig)
+    st.subheader("Average Calories Burnt per Day")
+    avg_calories = time_df.groupby(time_df['ActivityDate'].dt.date)['Calories'].mean()
+    fig, ax = plt.subplots()
+    ax.bar(avg_calories.index, avg_calories.values, color='blue', edgecolor='black')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Average Calories')
+    ax.set_title('Average Calories Burnt per Day')
+    plt.xticks(rotation=45)
+    st.pyplot(fig)
+    
+
+    def workout_frequency_by_day(df):
+        df['ActivityDate'] = pd.to_datetime(df['ActivityDate'], format='%Y-%m-%d')
+        avg_calories = df.groupby('ActivityDate')['Calories'].mean()
+        
+        # Create positions for each bar
+        positions = range(len(avg_calories))
+        
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.bar(positions, avg_calories.values, color='blue', edgecolor='black')
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Average Calories")
+        ax.set_title("Average Calories by Date")
+        ax.set_xticks(positions)
+        ax.set_xticklabels(avg_calories.index.strftime('%Y-%m-%d'), rotation=45)
+        ax.grid(axis='y', linestyle='--', alpha=0.7)
+        
+        return fig
+    fig = workout_frequency_by_day(time_df)
+    st.pyplot(fig)
