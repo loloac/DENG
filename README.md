@@ -31,6 +31,15 @@ The Database, called **fitbit_database.db** consists of multiple tables with dif
 
 The dashboard visualizes data through various graphs, providing insights into the relation between key variables to understand their impact on each other. The Dashboard shows user specific data, data filtered by date ranges and general statiscs, allowing a deeper analysis of trends and patterns to better help the understanding of overall health and fitness metrics.
 
+![image](https://github.com/user-attachments/assets/162fa882-d20b-4519-9628-a13e7e340a6d)
+
+![image](https://github.com/user-attachments/assets/30b2fe65-e2c7-410b-a2dc-3d3764fe402a)
+
+![image](https://github.com/user-attachments/assets/692192f7-7a3f-4957-b8d3-0e3bb05a156c)
+
+
+
+
 
 ### **How to run**
 
